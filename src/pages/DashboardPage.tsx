@@ -263,6 +263,44 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Resume Generation */}
+        <div className="glass rounded-[2rem] p-8 flex flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-black uppercase tracking-[0.2em]">Professional Document</h3>
+            {resume && (
+              <button onClick={handleExportPDF} className="p-2 hover:bg-white/10 rounded-full transition-colors text-brand-blue" title="Export PDF">
+                <Download size={16} />
+              </button>
+            )}
+          </div>
+          
+          {!resume ? (
+            <button 
+              onClick={handleCreateResume}
+              disabled={generatingResume}
+              className="w-full py-4 glass border border-brand-blue/30 text-brand-blue text-[10px] font-black uppercase tracking-[0.2em] rounded-xl hover:bg-brand-blue/10 transition-all flex justify-center items-center gap-2"
+            >
+              {generatingResume ? <RefreshCw className="animate-spin" size={16} /> : <FileText size={16} />}
+              {generatingResume ? "Synthesizing Document..." : "Generate Neural Resume"}
+            </button>
+          ) : (
+            <div className="relative group">
+              <div 
+                id="resume-content"
+                className="bg-white/5 border border-white/10 p-6 rounded-2xl max-h-[300px] overflow-y-auto text-xs text-gray-300 font-sans whitespace-pre-wrap leading-relaxed shadow-inner"
+              >
+                <ReactMarkdown>{resume}</ReactMarkdown>
+              </div>
+              <button 
+                onClick={handleCopyText}
+                className="absolute top-4 right-8 p-2 bg-black/40 hover:bg-brand-blue/20 rounded-lg text-white transition-colors opacity-0 group-hover:opacity-100 backdrop-blur-md border border-white/10"
+              >
+                {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+              </button>
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Right Content Area: Map & Job Listings */}
