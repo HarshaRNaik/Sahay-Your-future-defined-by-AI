@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mic, Send, User as UserIcon, CheckCircle2, ChevronRight, Map as MapIcon, Zap, Languages, Info } from 'lucide-react';
+import { Mic, Send, User as UserIcon, CheckCircle2, ChevronRight, Map as MapIcon, Zap, Languages, Info, FileText, Briefcase } from 'lucide-react';
 import { auth, db } from '../lib/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../lib/utils';
-import { processChatMessage } from '../services/geminiService';
+import { processChatMessage, generateResume, getJobMatches } from '../services/geminiService';
 
 interface Message {
   id: string;
@@ -93,6 +93,45 @@ export default function ChatPage() {
         role: 'bot',
         text: "The line is fuzzy. Please try saying that again?"
       }]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const handleGenerateResume = async () => {
+    if (!extractedData) return;
+    setIsTyping(true);
+    try {
+      const markdown = await generateResume({
+        skills: extractedData.skills,
+        experience: extractedData.experience,
+        jobType: extractedData.trade,
+        location: extractedData.location
+      });
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        role: 'bot',
+        text: "Here is your professional resume draft:\n\n" + markdown
+      }]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const handleFindJobs = async () => {
+    if (!extractedData) return;
+    setIsTyping(true);
+    try {
+      // Create a mock job description based on the extracted trade
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        role: 'bot',
+        text: `Based on your experience in ${extractedData.trade}, here is a typical job description and requirements for roles in your area:\n\n**Role: Senior ${extractedData.trade}**\n\n**Requirements:**\n- Experience: ${extractedData.experience}\n- Key Skills: ${(extractedData.skills || []).join(', ')}\n- Location: ${extractedData.location}\n\n**Description:**\nWe are looking for an experienced ${extractedData.trade} to join our industrial workforce. You will be responsible for executing high-quality work according to safety standards. Immediate joining preferred.\n\n*Click "Review Profile" to see actual live job matches on your map!*`
+      }]);
+    } catch (err) {
+      console.error(err);
     } finally {
       setIsTyping(false);
     }
@@ -187,7 +226,7 @@ export default function ChatPage() {
                 "p-8 glass-card rounded-[2.5rem] shadow-2xl transition-all",
                 m.role === 'bot' ? "bg-bg-card/80 backdrop-blur-3xl border-white/5" : "bg-brand-blue text-white border-transparent"
               )}>
-                <p className="text-lg leading-relaxed font-bold tracking-tight italic">{m.text}</p>
+                <p className="text-lg leading-relaxed font-bold tracking-tight italic whitespace-pre-wrap">{m.text}</p>
               </div>
             </motion.div>
           ))}
@@ -219,12 +258,26 @@ export default function ChatPage() {
             <MapIcon size={16} className="text-brand-blue" />
             Region: {extractedData.location_context || extractedData.location}
           </div>
-          <button 
-            onClick={() => navigate('/dashboard')}
-            className="px-6 py-3 rounded-2xl bg-white text-black text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-3 shadow-xl hover:bg-gray-100 transition-all ml-auto"
-          >
-            Review Profile <ChevronRight size={14} />
-          </button>
+          <div className="w-full flex gap-3 mt-4">
+            <button 
+              onClick={handleGenerateResume}
+              className="flex-1 px-6 py-3 rounded-2xl bg-brand-blue/20 text-brand-blue border border-brand-blue/30 text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 shadow-xl hover:bg-brand-blue/30 transition-all"
+            >
+              <FileText size={14} /> Build Resume
+            </button>
+            <button 
+              onClick={handleFindJobs}
+              className="flex-1 px-6 py-3 rounded-2xl bg-brand-blue/20 text-brand-blue border border-brand-blue/30 text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 shadow-xl hover:bg-brand-blue/30 transition-all"
+            >
+              <Briefcase size={14} /> Job Description
+            </button>
+            <button 
+              onClick={() => navigate('/dashboard')}
+              className="flex-1 px-6 py-3 rounded-2xl bg-white text-black text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl hover:bg-gray-100 transition-all"
+            >
+              Review Profile <ChevronRight size={14} />
+            </button>
+          </div>
         </motion.div>
       )}
 
