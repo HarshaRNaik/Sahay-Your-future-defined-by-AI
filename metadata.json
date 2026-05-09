@@ -1,0 +1,6 @@
+{
+  "name": "Sahay",
+  "description": "A voice-first AI job and apprenticeship platform for informal-sector workers in India. Your future, defined by AI.",
+  "requestFramePermissions": ["microphone", "geolocation"],
+  "majorCapabilities": ["voice_interaction", "agentic_matching", "resume_automation", "multilingual_support"]
+}

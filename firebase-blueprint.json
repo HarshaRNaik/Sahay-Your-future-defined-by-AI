@@ -1,0 +1,67 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Worker profile info extracted by AI and general auth details.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "skills": { "type": "array", "items": { "type": "string" } },
+        "experience": { "type": "string" },
+        "jobType": { "type": "string" },
+        "summary": { "type": "string" },
+        "location": { "type": "string" },
+        "telegramHandle": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "createdAt", "updatedAt"]
+    },
+    "Job": {
+      "title": "Job Posting",
+      "description": "Job listings for matching. Read-only for workers.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "company": { "type": "string" },
+        "location": { "type": "string" },
+        "salary": { "type": "string" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Application": {
+      "title": "Job Application",
+      "description": "Tracks worker applications to jobs.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "workerId": { "type": "string" },
+        "jobId": { "type": "string" },
+        "status": { "type": "string", "enum": ["applied", "vetting", "hired", "rejected"] },
+        "matchScore": { "type": "number" },
+        "matchingReason": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User specific profile and skill data"
+    },
+    "/jobs/{jobId}": {
+      "schema": "Job",
+      "description": "Industrial job listings"
+    },
+    "/applications/{applicationId}": {
+      "schema": "Application",
+      "description": "Worker job applications"
+    }
+  }
+}

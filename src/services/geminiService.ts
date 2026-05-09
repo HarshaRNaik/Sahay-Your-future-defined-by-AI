@@ -1,0 +1,192 @@
+import { authFetch } from './backendApi';
+import { GoogleGenAI, Type } from "@google/genai";
+
+// Initialize Gemini in frontend as per skill requirements
+// AI Studio handles the GEMINI_API_KEY injection
+const ai = new GoogleGenAI({ apiKey: (process.env.GEMINI_API_KEY as string) });
+
+export interface UserProfile {
+  uid: string;
+  displayName: string;
+  email: string;
+  photoURL: string;
+  skills: string[];
+  experience: string;
+  jobType: string;
+  summary: string;
+  location?: string;
+  telegramHandle?: string;
+  updatedAt: any;
+  createdAt: any;
+}
+
+export interface SkillExtraction {
+  skills: string[];
+  experience: string;
+  jobType: string;
+  summary: string;
+  preferredRoles: string[];
+  location: string;
+}
+
+export async function extractSkills(input: string): Promise<SkillExtraction> {
+  try {
+    const result = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: `Extract profile details from: "${input}"`,
+      config: {
+        systemInstruction: "You are a skills extraction agent. Extract skills, experience, main trade (jobType), summary, preferred roles, and location from the input. Return valid JSON.",
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            skills: { type: Type.ARRAY, items: { type: Type.STRING } },
+            experience: { type: Type.STRING },
+            jobType: { type: Type.STRING },
+            summary: { type: Type.STRING },
+            preferredRoles: { type: Type.ARRAY, items: { type: Type.STRING } },
+            location: { type: Type.STRING }
+          },
+          required: ["skills", "experience", "jobType", "summary", "preferredRoles", "location"]
+        }
+      }
+    });
+
+    return JSON.parse(result.text);
+  } catch (error) {
+    console.error("Gemini Extraction Error", error);
+    throw error;
+  }
+}
+
+export async function generateResume(userData: Partial<UserProfile>): Promise<string> {
+  try {
+    const result = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: `Generate a resume for: ${JSON.stringify(userData)}`,
+      config: {
+        systemInstruction: "Generate a professional markdown resume for an Indian industrial worker. Return JSON with 'markdown' field.",
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            markdown: { type: Type.STRING }
+          },
+          required: ["markdown"]
+        }
+      }
+    });
+    const parsed = JSON.parse(result.text);
+    return parsed.markdown;
+  } catch (error) {
+    console.error("Gemini Resume Error", error);
+    return "Failed to generate resume.";
+  }
+}
+
+export async function processChatMessage(
+  message: string,
+  language: string = 'auto',
+  history: any[] = []
+): Promise<{ text: string; action: string; language?: string; data?: any }> {
+  try {
+    const result = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [...history, { role: "user", parts: [{ text: message }] }],
+      config: {
+        systemInstruction: `You are Sahay AI, a warm, professional career assistant for informal workers in India.
+        Respond in the user's language.
+        If the user provides their experience or trade, set action to 'UPDATE_PROFILE' and include extracted data.
+        If they seem ready for jobs, set action to 'REDIRECT_MATCHES'.
+        Otherwise, set action to 'STAY'.
+        Respond with a JSON object: { "text": "agent reply", "action": "STAY|UPDATE_PROFILE|REDIRECT_MATCHES", "data": { "trade": "...", "skills": [], "experience": "...", "location": "..." } }`,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            text: { type: Type.STRING },
+            action: { type: Type.STRING, enum: ["STAY", "UPDATE_PROFILE", "REDIRECT_MATCHES"] },
+            data: {
+              type: Type.OBJECT,
+              properties: {
+                trade: { type: Type.STRING },
+                skills: { type: Type.ARRAY, items: { type: Type.STRING } },
+                experience: { type: Type.STRING },
+                location: { type: Type.STRING }
+              }
+            }
+          },
+          required: ["text", "action"]
+        }
+      }
+    });
+
+    return JSON.parse(result.text);
+  } catch (error: any) {
+    console.error("Gemini Chat Error", error);
+    return { 
+      text: `Technical hiccup: ${error.message || String(error)}`, 
+      action: "STAY" 
+    };
+  }
+}
+
+export async function getJobMatches(userSkills: string[]) {
+  const language = localStorage.getItem('sahay-language') || 'auto';
+  const params = new URLSearchParams();
+  params.set('skills', userSkills.join(','));
+  params.set('language', language);
+  const response = await authFetch(`/api/matches?${params.toString()}`);
+  return response.matches || [];
+}
+
+export async function getJobs() {
+  const response = await fetch('/api/jobs');
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to load jobs.');
+  }
+  return data.jobs || [];
+}
+
+export async function createJob(payload: any) {
+  return authFetch('/api/jobs', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getApplications() {
+  const response = await authFetch('/api/applications');
+  return response.applications || [];
+}
+
+export async function getBackendOptions() {
+  const response = await fetch('/api/backend/options');
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to load backend options.');
+  }
+  return data.backend || {};
+}
+
+export async function notifyTelegram(payload: any) {
+  return authFetch('/api/notify', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function submitApplication(payload: any) {
+  return authFetch('/api/applications', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function generateSiteReport(payload: any) {
+  return authFetch('/api/report', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
