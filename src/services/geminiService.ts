@@ -32,7 +32,7 @@ export interface SkillExtraction {
 export async function extractSkills(input: string): Promise<SkillExtraction> {
   try {
     const result = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash-lite",
       contents: `Extract profile details from: "${input}"`,
       config: {
         systemInstruction: "You are a skills extraction agent. Extract skills, experience, main trade (jobType), summary, preferred roles, and location from the input. Return valid JSON.",
@@ -62,7 +62,7 @@ export async function extractSkills(input: string): Promise<SkillExtraction> {
 export async function generateResume(userData: Partial<UserProfile>): Promise<string> {
   try {
     const result = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash-lite",
       contents: `Generate a resume for: ${JSON.stringify(userData)}`,
       config: {
         systemInstruction: "Generate a professional markdown resume for an Indian industrial worker. The resume MUST be written completely in English, regardless of the user's input language. Return JSON with 'markdown' field.",
@@ -78,9 +78,9 @@ export async function generateResume(userData: Partial<UserProfile>): Promise<st
     });
     const parsed = JSON.parse(result.text);
     return parsed.markdown;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini Resume Error", error);
-    return "Failed to generate resume.";
+    return `Failed to generate resume: ${error.message || String(error)}`;
   }
 }
 
@@ -91,7 +91,7 @@ export async function processChatMessage(
 ): Promise<{ text: string; action: string; language?: string; data?: any }> {
   try {
     const result = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash-lite",
       contents: [...history, { role: "user", parts: [{ text: message }] }],
       config: {
         systemInstruction: `You are Sahay AI, a warm, professional career assistant for informal workers in India.

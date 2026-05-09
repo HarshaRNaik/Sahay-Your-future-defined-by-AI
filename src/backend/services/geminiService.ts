@@ -16,7 +16,7 @@ export class GeminiService {
   static async extractSkills(input: string): Promise<ExtractionResult> {
     try {
       const result = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-2.0-flash-lite",
         contents: `Extract profile details from the following user input: "${input}"`,
         config: {
           systemInstruction: `You are an expert recruitment assistant for the Indian informal sector (construction, trades, factories).
@@ -50,7 +50,7 @@ export class GeminiService {
   static async generateResume(profile: any): Promise<{ markdown: string; linkedInSummary: string }> {
     try {
       const result = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-2.0-flash-lite",
         contents: `Generate a resume for this profile: ${JSON.stringify(profile)}`,
         config: {
           systemInstruction: `Generate a professional, high-impact markdown resume for an Indian industrial worker.
@@ -85,7 +85,7 @@ export class GeminiService {
         : message;
 
       const result = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-2.0-flash-lite",
         contents: contents,
         config: {
           systemInstruction: `You are Sahay AI, a warm, professional, and encouraging career assistant for informal workers in India.
@@ -110,7 +110,7 @@ export class GeminiService {
   static async matchJobs(userProfile: any, jobs: any[]): Promise<any[]> {
     try {
       const result = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-2.0-flash-lite",
         contents: `Match user profile ${JSON.stringify(userProfile)} with available jobs ${JSON.stringify(jobs)}`,
         config: {
           systemInstruction: `You are a job matching agent. Compare the user's skills and experience with job requirements.
