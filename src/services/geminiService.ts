@@ -65,7 +65,7 @@ export async function generateResume(userData: Partial<UserProfile>): Promise<st
       model: "gemini-2.5-flash",
       contents: `Generate a resume for: ${JSON.stringify(userData)}`,
       config: {
-        systemInstruction: "Generate a professional markdown resume for an Indian industrial worker. Return JSON with 'markdown' field.",
+        systemInstruction: "Generate a professional markdown resume for an Indian industrial worker. The resume MUST be written completely in English, regardless of the user's input language. Return JSON with 'markdown' field.",
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -95,11 +95,11 @@ export async function processChatMessage(
       contents: [...history, { role: "user", parts: [{ text: message }] }],
       config: {
         systemInstruction: `You are Sahay AI, a warm, professional career assistant for informal workers in India.
-        Respond in the user's language.
+        Respond in the user's chosen language, but keep your response short, friendly, and direct. DO NOT include any internal thoughts, reasoning, or multiple greetings in the 'text' field. Just provide the exact response the user should read.
         If the user provides their experience or trade, set action to 'UPDATE_PROFILE' and include extracted data.
         If they seem ready for jobs, set action to 'REDIRECT_MATCHES'.
         Otherwise, set action to 'STAY'.
-        Respond with a JSON object: { "text": "agent reply", "action": "STAY|UPDATE_PROFILE|REDIRECT_MATCHES", "data": { "trade": "...", "skills": [], "experience": "...", "location": "..." } }`,
+        Respond with a JSON object: { "text": "short, direct agent reply", "action": "STAY|UPDATE_PROFILE|REDIRECT_MATCHES", "data": { "trade": "...", "skills": [], "experience": "...", "location": "..." } }`,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
