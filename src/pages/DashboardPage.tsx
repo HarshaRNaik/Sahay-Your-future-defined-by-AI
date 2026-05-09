@@ -81,6 +81,12 @@ export default function DashboardPage() {
     if (!user) return;
     setLoading(true);
     try {
+      // Try to load cached resume from local storage
+      const cachedResume = localStorage.getItem('sahay-resume');
+      if (cachedResume) {
+        setResume(cachedResume);
+      }
+
       const [docSnap, jobsData] = await Promise.all([
         getDoc(doc(db, 'users', user.uid)),
         getJobs()
@@ -109,6 +115,7 @@ export default function DashboardPage() {
     try {
       const text = await generateResume(profile);
       setResume(text);
+      localStorage.setItem('sahay-resume', text); // Persist to local storage
     } catch (err) {
       console.error(err);
     } finally {

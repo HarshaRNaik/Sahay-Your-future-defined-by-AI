@@ -108,6 +108,7 @@ export default function ChatPage() {
         jobType: extractedData.trade,
         location: extractedData.location
       });
+      localStorage.setItem('sahay-resume', markdown); // Sync to Dashboard
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
         role: 'bot',
